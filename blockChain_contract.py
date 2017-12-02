@@ -7,6 +7,7 @@ from web3.contract import ConciseContract
 
 import time
 
+
 # Solidity source code
 contract_source_code = '''
 pragma solidity ^0.4.19;
@@ -100,33 +101,28 @@ contract tripRater {
 }
 '''
 
-# lilac snack grip justly elm poster zeppelin poet dealt spectrum unnoticed subtype
+def deploy_contract():
+    compiled_sol = compile_source(contract_source_code) # Compiled source code
+    contract_interface = compiled_sol['<stdin>:tripRater']
 
-compiled_sol = compile_source(contract_source_code) # Compiled source code
-contract_interface = compiled_sol['<stdin>:tripRater']
+    # web3.py instance
+    w3 = Web3(HTTPProvider('http://localhost:8545'))
 
-# web3.py instance
-w3 = Web3(HTTPProvider('http://localhost:8545'))
+    # Instantiate and deploy contract
+    contract = w3.eth.contract(contract_interface['abi'], bytecode=contract_interface['bin'])
 
-# Instantiate and deploy contract
-contract = w3.eth.contract(contract_interface['abi'], bytecode=contract_interface['bin'])
+    # Get transaction hash from deployed contract
+    tx_hash = contract.deploy(transaction={'from': w3.eth.accounts[0], 'gas': 4100000 }, args=[0,0])
+    # print(tx_hash)
+    time.sleep(30)
+    # Get tx receipt to get contract address
+    tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
+    # print(tx_receipt)
+    contract_address = tx_receipt['contractAddress']
 
-# Get transaction hash from deployed contract
-tx_hash = contract.deploy(transaction={'from': w3.eth.accounts[0], 'gas': 4100000 }, args=[0,0])
-# print(tx_hash)
-time.sleep(30)
-# Get tx receipt to get contract address
-tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
-# print(tx_receipt)
-contract_address = tx_receipt['contractAddress']
+    # Contract instance in concise mode
+    contract_instance = w3.eth.contract(contract_interface['abi'], contract_address, ContractFactoryClass=ConciseContract)
 
-# Contract instance in concise mode
-contract_instance = w3.eth.contract(contract_interface['abi'], contract_address, ContractFactoryClass=ConciseContract)
+    print("Contract deployed successfully")
 
-# Getters + Setters for web3.eth.contract object
-print('Is truck driving: {}'.format(contract_instance.isTruckDriving()))
-contract_instance.trackLightEvent(12345678,1)
-
-# trackLightEvent(transact={'from': w3.eth.accounts[0]},args=[1513697,100])
-time.sleep(30)
-print('Contract value: {}'.format(contract_instance.getTripRating()))
+    return contract_instance, tx_receipt

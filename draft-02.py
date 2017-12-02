@@ -3,9 +3,9 @@
 
 # ## Data aggregation
 # This script does the data aggregation.
-# 
+#
 # Inputs: data in json format
-# 
+#
 # Output: Aggregated data in json
 
 # ## Import the data
@@ -16,6 +16,8 @@
 import json
 import numpy as np
 import datetime
+from blockChain_contract import deploy_contract as deploy_c
+import time
 
 
 # ## Data info
@@ -29,12 +31,25 @@ import datetime
 
 # In[2]:
 
-
 allData = []
 for line in open('./data/trailer-D.json', 'r'):
     parsed_json = json.loads(line)
     allData.append(parsed_json)
 
+
+assert allData != []
+
+## Deploy the contract at the beginning of the trip
+contract_instance, tx_receipt = deploy_c()
+
+# Getters + Setters for web3.eth.contract object
+print('Is truck driving: {}'.format(contract_instance.isTruckDriving()))
+
+
+contract_instance.trackLightEvent(12345678,1)
+# trackLightEvent(transact={'from': w3.eth.accounts[0]},args=[1513697,100])
+time.sleep(30)
+print('Contract value: {}'.format(contract_instance.getTripRating()))
 
 # In[3]:
 
@@ -44,15 +59,15 @@ for data in allData:
     aa = data['sensorType']
     sensors.update(set([aa]))
     # print(aa)
-print(sensors)
+print("Sensor types in the data", sensors)
 
 
 # In[4]:
-
+'''
 
 class SensorDataALL(object):
     sensor = ""
-    # The class "constructor" - It's actually an initializer 
+    # The class "constructor" - It's actually an initializer
     def __init__(self, sensor):
         self.sensor = sensor
 
@@ -62,23 +77,23 @@ class SensorDataInfo(object):
     # dt = datetime.datetime(2012, 5, 1)
     timestamp = datetime.datetime.now()
     sensorLocation = ""
-    
-    # The class "constructor" - It's actually an initializer 
+
+    # The class "constructor" - It's actually an initializer
     def __init__(self, valueLength, values, timestamp, sensorLocation):
         self.valueLength = valueLength
         self.values = values
         self.timestamp = timestamp
         self.sensorLocation = sensorLocation
-        
+
     def getvalues(self):
         return self.values
 
     def getvalueLength(self):
         return self.valueLength
-    
+
     def gettimestamp(self):
         return self.timestamp
-        
+
     def getsensorLocation(self):
         return self.sensorLocation
 
@@ -132,7 +147,7 @@ for sens,data in sensor_data.items():
             time_stp.append(dat.gettimestamp())
 
 x = [datetime.datetime.strptime(elem, '%Y-%m-%d %H:%M:%S.%f') for elem in time_stp]
-            
+
 print(len(x),len(sens_val))
 # Plot the data
 plt.plot(x,sens_val, label='linear')
@@ -157,7 +172,7 @@ for sens,data in sensor_data.items():
             sens_val.append(dat.getvalues())
             time_stp.append(dat.gettimestamp())
 
-            
+
 ## Generate the data list
 sens_val1 = []
 sens_val2 = []
@@ -166,8 +181,8 @@ for sens,data in sensor_data.items():
         for dat in data:
             sens_val1.append(dat.getvalues()[0])
             sens_val2.append(dat.getvalues()[1])
-            
-            
+
+
 timeStampfinal = [datetime.datetime.strptime(elem, '%Y-%m-%d %H:%M:%S.%f') for elem in time_stp]
 
 print(len(sens_val),len(sens_val1),len(timeStampfinal))
@@ -190,7 +205,7 @@ plt.show()
 # In[10]:
 
 
-## Get difference in time 
+## Get difference in time
 # np.diff(index)/np.timedelta64(1, 's')
 
 
@@ -218,16 +233,16 @@ for sens,data in sensor_data.items():
             time_stp.append(np.datetime64(dat.gettimestamp()))
 
 try:
-    assert len(acc_x) == len(acc_y) 
+    assert len(acc_x) == len(acc_y)
     assert len(acc_z) == len(time_stp)
-    
+
     time_diff = np.diff(time_stp)/np.timedelta64(1, 's')
 
     vel_x.append(0)
     vel_y.append(0)
     vel_z.append(0)
     vel_abs.append(0)
-    
+
     ## Generate velocities
     for i in range(len(acc_x)):
         # Integrate over the acceleration data:
@@ -236,9 +251,9 @@ try:
         vz = (acc_z[i+1]-acc_z[i])*(time_diff[i]) + vel_z[i]
         vel_x.append(vx)
         vel_y.append(vy)
-        vel_z.append(vz) 
+        vel_z.append(vz)
         vel_abs.append(np.sqrt(vx**2+vy**2+vz**2))
-        
+
 except:
     pass
 
@@ -271,4 +286,4 @@ web3.eth.blockNumber
 
 
 
-
+'''
