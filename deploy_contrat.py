@@ -114,7 +114,7 @@ contract = w3.eth.contract(contract_interface['abi'], bytecode=contract_interfac
 # Get transaction hash from deployed contract
 tx_hash = contract.deploy(transaction={'from': w3.eth.accounts[0], 'gas': 4100000 }, args=[0,0])
 print(tx_hash)
-time.sleep(10)
+time.sleep(30)
 # Get tx receipt to get contract address
 tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
 print(tx_receipt)
@@ -125,6 +125,8 @@ contract_instance = w3.eth.contract(contract_interface['abi'], contract_address,
 
 # Getters + Setters for web3.eth.contract object
 print('Is truck driving: {}'.format(contract_instance.isTruckDriving()))
-contract_instance.trackLightEvent(args=[1513697,100], transact={'from': w3.eth.accounts[0], 'gas': 4100000})
-time.sleep(10)
+contract_instance.trackLightEvent(12345678,1)
+
+# trackLightEvent(transact={'from': w3.eth.accounts[0]},args=[1513697,100])
+time.sleep(30)
 print('Contract value: {}'.format(contract_instance.getTripRating()))
