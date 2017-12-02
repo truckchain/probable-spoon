@@ -20,6 +20,22 @@ from blockChain_contract import deploy_contract as deploy_c
 import time
 
 
+## To add a block to the blockChain just do this:
+## contract_instance.trackLightEvent(12345678,1)
+
+
+def add_data_blockchain(tx_receipt,timest, lightVal):
+    old_add = tx_receipt['contractAddress']
+    contract_instance.trackLightEvent(timest,lightVal)
+    time.sleep(30)
+    print('Contract value: {}'.format(contract_instance.getTripRating()))
+
+    #print(old_add)
+    #while(tx_receipt['contractAddress']==old_add):
+    #    print(tx_receipt['contractAddress'])
+    #    time.sleep(1)
+
+
 # ## Data info
 # * sensorType
 # * valueLength
@@ -46,13 +62,7 @@ contract_instance, tx_receipt = deploy_c()
 print('Is truck driving: {}'.format(contract_instance.isTruckDriving()))
 
 
-contract_instance.trackLightEvent(12345678,1)
-# trackLightEvent(transact={'from': w3.eth.accounts[0]},args=[1513697,100])
-time.sleep(30)
-print('Contract value: {}'.format(contract_instance.getTripRating()))
-
-# In[3]:
-
+add_data_blockchain(tx_receipt,102, 103)
 
 sensors = set()
 for data in allData:
@@ -60,10 +70,6 @@ for data in allData:
     sensors.update(set([aa]))
     # print(aa)
 print("Sensor types in the data", sensors)
-
-
-# In[4]:
-'''
 
 class SensorDataALL(object):
     sensor = ""
@@ -98,9 +104,6 @@ class SensorDataInfo(object):
         return self.sensorLocation
 
 
-# In[5]:
-
-
 sensor_data = dict()
 for sensor in sensors:
     sensor_data[sensor]=[]
@@ -111,29 +114,12 @@ for sensor in sensors:
             sensor_data[sensor].append(sensr_obj)
 
 
-# In[6]:
 
-
-for sens,data in sensor_data.items():
-    print(sens)
-    # print(data.gettimestamp())
-    for dat in data:
-        print(np.datetime64(dat.gettimestamp()))
-        #time_stamp = datetime.datetime.fromtimestamp().strftime('%Y-%m-%d %H:%M:%S')
-        # print(dat.getvalues()[0], dat.gettimestamp())
-
+#########################################################
+########### Data preprocesssing finished!!!##############
+#########################################################
 
 # ## Plotting the data
-
-# In[7]:
-
-
-type(datetime.datetime.now())
-
-
-# In[8]:
-
-
 import matplotlib.pyplot as plt
 
 time_stp = []
@@ -199,6 +185,10 @@ plt.legend()
 # Show the plot
 plt.show()
 
+
+
+
+'''
 
 # ## Compute Veclocity
 
