@@ -18,18 +18,23 @@ import numpy as np
 import datetime
 from blockChain_contract import deploy_contract as deploy_c
 import time
-
+LIGHT_THRESHOLD = 2000
 
 ## To add a block to the blockChain just do this:
 ## contract_instance.trackLightEvent(12345678,1)
 
 
-def add_data_blockchain(tx_receipt,timest, lightVal):
+def add_blk_light(tx_receipt,timestampVal, lightVal):
     old_add = tx_receipt['contractAddress']
-    contract_instance.trackLightEvent(timest,lightVal)
+    contract_instance.trackLightEvent(timestampVal,lightVal)
     time.sleep(30)
     print('Contract value: {}'.format(contract_instance.getTripRating()))
 
+def add_blk_bump(tx_receipt,timestampVal, accVal):
+    old_add = tx_receipt['contractAddress']
+    contract_instance.trackLightEvent(timestampVal,accVal)
+    time.sleep(30)
+    print('Contract value: {}'.format(contract_instance.getTripRating()))
     #print(old_add)
     #while(tx_receipt['contractAddress']==old_add):
     #    print(tx_receipt['contractAddress'])
@@ -56,13 +61,10 @@ for line in open('./data/trailer-D.json', 'r'):
 assert allData != []
 
 ## Deploy the contract at the beginning of the trip
-contract_instance, tx_receipt = deploy_c()
+# contract_instance, tx_receipt = deploy_c()
 
 # Getters + Setters for web3.eth.contract object
-print('Is truck driving: {}'.format(contract_instance.isTruckDriving()))
-
-
-add_data_blockchain(tx_receipt,102, 103)
+# print('Is truck driving: {}'.format(contract_instance.isTruckDriving()))
 
 sensors = set()
 for data in allData:
@@ -104,6 +106,7 @@ class SensorDataInfo(object):
         return self.sensorLocation
 
 
+
 sensor_data = dict()
 for sensor in sensors:
     sensor_data[sensor]=[]
@@ -119,72 +122,51 @@ for sensor in sensors:
 ########### Data preprocesssing finished!!!##############
 #########################################################
 
-# ## Plotting the data
-import matplotlib.pyplot as plt
 
-time_stp = []
-sens_val = []
 
-## Generate the data list
+## Now we run the truck data as a simulation in real time
+
+# 1. Get the time data as a difference
+light_ = []
+acc_x = []
+acc_y = []
+acc_z = []
+time_stamp = []
 for sens,data in sensor_data.items():
-    if sens=="GYROSCOPE":
+    if sens=="ACCELEROMETER":
         for dat in data:
-            sens_val.append(dat.getvalues()[0])
-            time_stp.append(dat.gettimestamp())
-
-x = [datetime.datetime.strptime(elem, '%Y-%m-%d %H:%M:%S.%f') for elem in time_stp]
-
-print(len(x),len(sens_val))
-# Plot the data
-plt.plot(x,sens_val, label='linear')
-# Add a legend
-plt.legend()
-# Show the plot
-plt.show()
-
-
-# In[9]:
-
-
-import matplotlib.pyplot as plt
-
-time_stp = []
-sens_val = []
-
-## Generate the data list
-for sens,data in sensor_data.items():
+            acc_x.append(dat.getvalues()[0])
+            acc_y.append(dat.getvalues()[1])
+            acc_z.append(dat.getvalues()[2])
+            time_stamp.append(np.datetime64(dat.gettimestamp()))
     if sens=="LIGHT":
         for dat in data:
-            sens_val.append(dat.getvalues())
-            time_stp.append(dat.gettimestamp())
 
+            light_.append(dat.getvalues())
 
-## Generate the data list
-sens_val1 = []
-sens_val2 = []
-for sens,data in sensor_data.items():
-    if sens=="TEMPERATURE":
-        for dat in data:
-            sens_val1.append(dat.getvalues()[0])
-            sens_val2.append(dat.getvalues()[1])
+try:
+    assert len(light_) == len(time_stamp)
+    assert len(acc_z) == len(time_stamp)
 
+except:
+    print("Length of time stamp does not match that of sensor data")
 
-timeStampfinal = [datetime.datetime.strptime(elem, '%Y-%m-%d %H:%M:%S.%f') for elem in time_stp]
+time_diff = np.diff(time_stamp)/np.timedelta64(1, 's')
 
-print(len(sens_val),len(sens_val1),len(timeStampfinal))
+## Run the truck data as simulation
+for i in range(len(acc_z)):
+    #Data anomalies
+    if light_[i]>LIGHT_THRESHOLD:
+        print("Light threshold anomaly detected")
+        pass
+        #add_blk_light(tx_receipt,time_stamp[i], light_[i])
 
-# Plot the data
-plt.figure(1)
-plt.plot(timeStampfinal[:190],sens_val[:190], label='linear')
-
-plt.figure(2)
-plt.plot(timeStampfinal[:190],sens_val1[:190], label='linear')
-plt.plot(timeStampfinal[:190],sens_val2[:190], label='linear')
-# Add a legend
-plt.legend()
-# Show the plot
-plt.show()
-
+    if acc_z[i]>-0.5:
+        print("Acceleration data anomaly detected")
+        pass
+        #add_blk_bump(tx_receipt,time_stamp[i], light_[i])
+    print("Sleeping for time: ",time_diff[i])
+    time.sleep(time_diff[i]/100)
 
 
 
