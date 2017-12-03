@@ -79,13 +79,13 @@ assert allData != []
 
 ## Connect to a block chain and the get the trip id based on event trigger
 
-addr = "0x9f475A85E53A5025053c7654255172f1BE5eAda1"
+addr = "0x0D84efb69AE7d1E3f4aE264248797f1F6024062a"
 
 ## Connect to the block chain
 w3, contract_instance = connect_to_chain(addr)
 
 
-new_trip_filter = contract_instance.on('NewTripRegistered',{})
+new_trip_filter = contract_instance.on('TripRegistered',{})
 
 ## Start a new trip
 transaction_id = contract_instance.transact().newTrip(0,0)
@@ -203,7 +203,7 @@ try:
         else:
             print(str(np.datetime64(datetime.datetime.now()))+" No notable change detected")
         # print("Sleeping for time: ",time_diff[i])
-        time.sleep(time_diff[i]/100)
+        time.sleep(time_diff[i])
 
 except:
     pass
