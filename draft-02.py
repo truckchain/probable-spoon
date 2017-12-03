@@ -30,7 +30,8 @@ def add_blk_light(w3, contract_instance, trip_id,timestampVal, lightVal):
     #p='%Y-%m-%d %H:%M:%S'
     #intTimeStamp = int(time.mktime(time.strptime(timestampVal,p)))
     print(trip_id,timestampVal,int(lightVal))
-    r  = contract_instance.trackLightEvent(trip_id,timestampVal,int(lightVal), transact={'from': w3.eth.accounts[0]})
+    # r  = contract_instance.trackLightEvent(trip_id,timestampVal,int(lightVal), transact={'from': w3.eth.accounts[0]})
+    r  = contract_instance.transact().trackLightEvent(trip_id,timestampVal,int(lightVal))
     print(r)
     # time.sleep(30)
     # print('Contract value: {}'.format(contract_instance.getTripRating()))
@@ -39,8 +40,9 @@ def add_blk_bump(w3, contract_instance,trip_id,timestampVal, accVal):
     # old_add = tx_receipt['contractAddress']
     #p='%Y-%m-%d %H:%M:%S'
     #intTimeStamp = int(time.mktime(time.strptime(timestampVal,p)))
-    print(trip_id,timestampVal,int(accVal*100000))
-    r = contract_instance.trackBumpEvent(trip_id,timestampVal,int(accVal*100000), transact={'from': w3.eth.accounts[0]})
+    print(trip_id,timestampVal,int(abs(accVal*100000)))
+    # r = contract_instance.trackBumpEvent(trip_id,timestampVal,int(accVal*100000), transact={'from': w3.eth.accounts[0]})
+    r = contract_instance.transact().trackBumpEvent(trip_id,timestampVal,int(abs(accVal*100000)))
     print(r)
     # time.sleep(30)
     # print('Contract value: {}'.format(contract_instance.getTripRating()))
@@ -62,28 +64,40 @@ def add_blk_bump(w3, contract_instance,trip_id,timestampVal, accVal):
 # In[2]:
 
 allData = []
-for line in open('./data/trailer-A.json', 'r'):
+for line in open('./data/trailer-D.json', 'r'):
     parsed_json = json.loads(line)
     allData.append(parsed_json)
 
 
+def getTripid(trip_filter):
+    trip_id_list = []
+
+    for trip_dict in trip_filter:
+        trip_id_list.append(trip_dict['args']['tripID'])
+
+    return trip_id_list[-1]
+
 assert allData != []
 
-addr = "0xFb49d5a8E98F4AE9c14b5e4CD36C824002D37AE2"
+addr = "0x9f475A85E53A5025053c7654255172f1BE5eAda1"
 
 ## Connect to the block chain
 w3, contract_instance = connect_to_chain(addr)
 
-new_trip_filter = contract_instance.on('NewTripRegistered', {'filter': {'_from': '0x00bEef35982F2dd3CD42be0a93799D4686C344C0'}})
+
+new_trip_filter = contract_instance.on('NewTripRegistered', {})
 
 ## Start a new trip
-transaction_id = contract_instance.newTrip(0,0, transact={'from': w3.eth.accounts[0]})
-time.sleep(10)
+transaction_id = contract_instance.transact().newTrip(0,0)
+time.sleep(20)
 #trip_id = contract_instance.newTrip(0,0)
+print(transaction_id)
+trip_filter = new_trip_filter.get()
 
-print(new_trip_filter.get())
+trip_id = getTripid(trip_filter)
+
+# print(new_trip_filter.watch(call_back))
 print("Trip id: ",str(trip_id))
-
 
 
 sensors = set()

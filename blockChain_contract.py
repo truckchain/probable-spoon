@@ -3,7 +3,7 @@ import web3
 
 from web3 import Web3, HTTPProvider
 from solc import compile_source
-from web3.contract import ConciseContract
+from web3.contract import Contract
 
 import time
 
@@ -26,10 +26,10 @@ def connect_to_chain(contract_address):
     contract = w3.eth.contract(contract_interface['abi'], bytecode=contract_interface['bin'])
 
     # Contract instance in concise mode
-    contract_instance = w3.eth.contract(contract_interface['abi'], contract_address, ContractFactoryClass=ConciseContract)
+    contract_instance = w3.eth.contract(contract_interface['abi'], contract_address, ContractFactoryClass=Contract)
 
     print("Contract connected successfully")
-    print("CarrierName: ", str(contract_instance.getCarrierName()))
+    print("CarrierName: ", str(contract_instance.call().getCarrierName()))
     # print("CarrierQuality: "+str(contract_instance.getCarrierQuality()))
 
     return w3, contract_instance
