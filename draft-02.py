@@ -16,7 +16,7 @@
 import json
 import numpy as np
 import datetime
-from blockChain_contract import deploy_contract as deploy_c
+from blockChain_contract import connect_to_chain
 import time
 LIGHT_THRESHOLD = 2000
 
@@ -24,15 +24,15 @@ LIGHT_THRESHOLD = 2000
 ## contract_instance.trackLightEvent(12345678,1)
 
 
-def add_blk_light(tx_receipt,timestampVal, lightVal):
+def add_blk_light(tx_receipt,carrierName,timestampVal, lightVal):
     old_add = tx_receipt['contractAddress']
-    contract_instance.trackLightEvent(timestampVal,lightVal)
+    contract_instance.trackLightEvent(carrierName,timestampVal,lightVal)
     time.sleep(30)
     print('Contract value: {}'.format(contract_instance.getTripRating()))
 
-def add_blk_bump(tx_receipt,timestampVal, accVal):
+def add_blk_bump(tx_receipt,carrierName,timestampVal, accVal):
     old_add = tx_receipt['contractAddress']
-    contract_instance.trackLightEvent(timestampVal,accVal)
+    contract_instance.trackBumpEvent(carrierName,timestampVal,accVal)
     time.sleep(30)
     print('Contract value: {}'.format(contract_instance.getTripRating()))
     #print(old_add)
@@ -53,12 +53,24 @@ def add_blk_bump(tx_receipt,timestampVal, accVal):
 # In[2]:
 
 allData = []
-for line in open('./data/trailer-D.json', 'r'):
+for line in open('./data/trailer-A.json', 'r'):
     parsed_json = json.loads(line)
     allData.append(parsed_json)
 
 
 assert allData != []
+
+addr = "0x2f5a7526A042dE3996C35a6e3aDEa554e089998E"
+
+contract_abi = connect_to_chain(addr)
+
+
+## Get carrier name
+carrierName = contract_instance.getCarrierName()
+
+
+## Connect to the block chain
+# contract_instance, tx_receipt = connect_to_chain(addr)
 
 ## Deploy the contract at the beginning of the trip
 # contract_instance, tx_receipt = deploy_c()
@@ -158,15 +170,15 @@ for i in range(len(acc_z)):
     #Data anomalies
     if light_[i]>LIGHT_THRESHOLD:
         print("Light threshold anomaly detected")
-        pass
-        #add_blk_light(tx_receipt,time_stamp[i], light_[i])
+        add_blk_light(tx_receipt,carrierName,time_stamp[i], light_[i])
 
     if acc_z[i]>-0.5:
         print("Acceleration data anomaly detected")
-        pass
-        #add_blk_bump(tx_receipt,time_stamp[i], light_[i])
+        add_blk_bump(tx_receipt,carrierName,time_stamp[i], light_[i])
     print("Sleeping for time: ",time_diff[i])
-    time.sleep(time_diff[i]/100)
+    time.sleep(time_diff[i])
+
+
 
 
 

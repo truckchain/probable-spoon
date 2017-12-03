@@ -15,6 +15,25 @@ contract_source_code = open(path,'r').read()
 # Solidity source code
 #contract_source_code = ''' '''
 
+def connect_to_chain(contract_address):
+    compiled_sol = compile_source(contract_source_code) # Compiled source code
+    contract_interface = compiled_sol['<stdin>:CarrierRegistry']
+
+    # web3.py instance
+    w3 = Web3(HTTPProvider('http://localhost:8545'))
+
+    # Instantiate and deploy contract
+    contract = w3.eth.contract(contract_interface['abi'], bytecode=contract_interface['bin'])
+
+    # Contract instance in concise mode
+    contract_instance = w3.eth.contract(contract_interface['abi'], contract_address, ContractFactoryClass=ConciseContract)
+
+    print("Contract connected successfully")
+    print("CarrierName: ", str(contract_instance.getCarrierName()))
+    # print("CarrierQuality: "+str(contract_instance.getCarrierQuality()))
+
+    return contract_instance
+
 def deploy_contract():
 
     compiled_sol = compile_source(contract_source_code) # Compiled source code
