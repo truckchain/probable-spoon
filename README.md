@@ -1,5 +1,5 @@
-# data_component
-This repo is based on python that takes the data in json format and processes it 
+# Simulator for IoT data
+This repo is based on python that takes the data in json format, processes it and creates blocks on the blockchain running on Etherium.
 
 ## Dependencies
 1. Numpy
