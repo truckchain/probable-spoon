@@ -10,9 +10,6 @@
 
 # ## Import the data
 
-# In[1]:
-
-
 import json
 import numpy as np
 import datetime
@@ -21,35 +18,14 @@ import time
 LIGHT_THRESHOLD = 2000
 
 ## To add a block to the blockChain just do this:
-## contract_instance.trackLightEvent(12345678,1)
-
-
 def add_blk_light(w3, contract_instance, trip_id,timestampVal, lightVal):
-    # old_add = tx_receipt['contractAddress']
-    ## Convert the timestampVal to integer
-    #p='%Y-%m-%d %H:%M:%S'
-    #intTimeStamp = int(time.mktime(time.strptime(timestampVal,p)))
     print(trip_id,timestampVal,int(lightVal))
-    # r  = contract_instance.trackLightEvent(trip_id,timestampVal,int(lightVal), transact={'from': w3.eth.accounts[0]})
     r  = contract_instance.transact().trackLightEvent(trip_id,timestampVal,int(lightVal))
-    print(r)
-    # time.sleep(30)
-    # print('Contract value: {}'.format(contract_instance.getTripRating()))
+
 
 def add_blk_bump(w3, contract_instance,trip_id,timestampVal, accVal):
-    # old_add = tx_receipt['contractAddress']
-    #p='%Y-%m-%d %H:%M:%S'
-    #intTimeStamp = int(time.mktime(time.strptime(timestampVal,p)))
     print(trip_id,timestampVal,int(abs(accVal*100000)))
-    # r = contract_instance.trackBumpEvent(trip_id,timestampVal,int(accVal*100000), transact={'from': w3.eth.accounts[0]})
     r = contract_instance.transact().trackBumpEvent(trip_id,timestampVal,int(abs(accVal*100000)))
-    print(r)
-    # time.sleep(30)
-    # print('Contract value: {}'.format(contract_instance.getTripRating()))
-    #print(old_add)
-    #while(tx_receipt['contractAddress']==old_add):
-    #    print(tx_receipt['contractAddress'])
-    #    time.sleep(1)
 
 
 # ## Data info
@@ -60,8 +36,6 @@ def add_blk_bump(w3, contract_instance,trip_id,timestampVal, accVal):
 # * sensorLocation
 
 # ## Data pre processing
-
-# In[2]:
 
 allData = []
 for line in open('./data/trailer-D.json', 'r'):
@@ -157,9 +131,6 @@ for sensor in sensors:
 #########################################################
 ########### Data preprocesssing finished!!!##############
 #########################################################
-
-
-
 ## Now we run the truck data as a simulation in real time
 
 # 1. Get the time data as a difference
@@ -191,109 +162,23 @@ except:
 
 time_diff = np.diff(time_stamp)/np.timedelta64(1, 's')
 
-## Run the truck data as simulation
-for i in range(len(acc_z)):
-    #Data anomalies
-    if light_[i]>LIGHT_THRESHOLD:
-        print("Light threshold anomaly detected")
-        print(time_stamp[i])
-        print(intTimeStamp[i])
-        add_blk_light(w3,contract_instance,trip_id,intTimeStamp[i], light_[i])
-
-    if acc_z[i]>-0.5:
-        print("Acceleration data anomaly detected")
-        add_blk_bump(w3,contract_instance,trip_id,intTimeStamp[i], acc_z[i])
-    print("Sleeping for time: ",time_diff[i])
-    time.sleep(time_diff[i]/100)
-
-
-'''
-
-
-# ## Compute Veclocity
-
-# In[10]:
-
-
-## Get difference in time
-# np.diff(index)/np.timedelta64(1, 's')
-
-
-# In[11]:
-
-
-## Define vel matrix
-vel_x = []
-vel_y = []
-vel_z = []
-
-acc_x = []
-acc_y = []
-acc_z = []
-time_stp = []
-vel_abs = []
-
-## Get accelerometer data
-for sens,data in sensor_data.items():
-    if sens=="ACCELEROMETER":
-        for dat in data:
-            acc_x.append(dat.getvalues()[0])
-            acc_y.append(dat.getvalues()[0])
-            acc_z.append(dat.getvalues()[0])
-            time_stp.append(np.datetime64(dat.gettimestamp()))
-
 try:
-    assert len(acc_x) == len(acc_y)
-    assert len(acc_z) == len(time_stp)
+    ## Run the truck data as simulation
+    for i in range(len(acc_z)):
+        #Data anomalies
+        if light_[i]>LIGHT_THRESHOLD:
+            print("Light threshold anomaly detected")
+            print(time_stamp[i])
+            print(intTimeStamp[i])
+            add_blk_light(w3,contract_instance,trip_id,intTimeStamp[i], light_[i])
 
-    time_diff = np.diff(time_stp)/np.timedelta64(1, 's')
-
-    vel_x.append(0)
-    vel_y.append(0)
-    vel_z.append(0)
-    vel_abs.append(0)
-
-    ## Generate velocities
-    for i in range(len(acc_x)):
-        # Integrate over the acceleration data:
-        vx = (acc_x[i+1]-acc_x[i])*(time_diff[i]) + vel_x[i]
-        vy = (acc_y[i+1]-acc_y[i])*(time_diff[i]) + vel_y[i]
-        vz = (acc_z[i+1]-acc_z[i])*(time_diff[i]) + vel_z[i]
-        vel_x.append(vx)
-        vel_y.append(vy)
-        vel_z.append(vz)
-        vel_abs.append(np.sqrt(vx**2+vy**2+vz**2))
+        if acc_z[i]>-0.5:
+            print("Acceleration data anomaly detected")
+            add_blk_bump(w3,contract_instance,trip_id,intTimeStamp[i], acc_z[i])
+        print("Sleeping for time: ",time_diff[i])
+        time.sleep(time_diff[i])
 
 except:
     pass
 
-
-# In[12]:
-
-
-vel_abs
-
-
-# In[13]:
-
-
-from web3 import Web3, HTTPProvider, IPCProvider
-
-
-# In[14]:
-
-
-web3 = Web3(HTTPProvider('http://localhost:8545'))
-
-
-# In[15]:
-
-
-web3.eth.blockNumber
-
-
-# In[ ]:
-
-
-
-'''
+contract_instance.transact().finalizeTrip(trip_id)
