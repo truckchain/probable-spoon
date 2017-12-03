@@ -5,3 +5,5 @@ This repo is based on python that takes the data in json format and processes it
 1. Numpy
 2. web3py
 3. Solidity compiler (solc)
+
+![shot](simulator-shot.png)
