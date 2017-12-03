@@ -32,7 +32,7 @@ def connect_to_chain(contract_address):
     print("CarrierName: ", str(contract_instance.getCarrierName()))
     # print("CarrierQuality: "+str(contract_instance.getCarrierQuality()))
 
-    return contract_instance
+    return w3, contract_instance
 
 def deploy_contract():
 

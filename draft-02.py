@@ -24,23 +24,24 @@ LIGHT_THRESHOLD = 2000
 ## contract_instance.trackLightEvent(12345678,1)
 
 
-def add_blk_light(contract_instance, trip_id,timestampVal, lightVal):
+def add_blk_light(w3, contract_instance, trip_id,timestampVal, lightVal):
     # old_add = tx_receipt['contractAddress']
     ## Convert the timestampVal to integer
     #p='%Y-%m-%d %H:%M:%S'
     #intTimeStamp = int(time.mktime(time.strptime(timestampVal,p)))
     print(trip_id,timestampVal,int(lightVal))
-    contract_instance.trackLightEvent(trip_id,timestampVal,int(lightVal))
+    r  = contract_instance.trackLightEvent(trip_id,timestampVal,int(lightVal), transact={'from': w3.eth.accounts[0]})
+    print(r)
     # time.sleep(30)
     # print('Contract value: {}'.format(contract_instance.getTripRating()))
 
-def add_blk_bump(contract_instance,trip_id,timestampVal, accVal):
+def add_blk_bump(w3, contract_instance,trip_id,timestampVal, accVal):
     # old_add = tx_receipt['contractAddress']
     #p='%Y-%m-%d %H:%M:%S'
     #intTimeStamp = int(time.mktime(time.strptime(timestampVal,p)))
     print(trip_id,timestampVal,int(accVal*100000))
-
-    contract_instance.trackBumpEvent(trip_id,timestampVal,int(accVal*100000))
+    r = contract_instance.trackBumpEvent(trip_id,timestampVal,int(accVal*100000), transact={'from': w3.eth.accounts[0]})
+    print(r)
     # time.sleep(30)
     # print('Contract value: {}'.format(contract_instance.getTripRating()))
     #print(old_add)
@@ -68,21 +69,22 @@ for line in open('./data/trailer-A.json', 'r'):
 
 assert allData != []
 
-addr = "0xC88B6650665cE79BbC30383417CDd1ac6A47CA78"
+addr = "0xFb49d5a8E98F4AE9c14b5e4CD36C824002D37AE2"
 
 ## Connect to the block chain
-contract_instance = connect_to_chain(addr)
+w3, contract_instance = connect_to_chain(addr)
+
+new_trip_filter = contract_instance.on('NewTripRegistered', {'filter': {'_from': '0x00bEef35982F2dd3CD42be0a93799D4686C344C0'}})
 
 ## Start a new trip
-trip_id = contract_instance.newTrip(0,0)
+transaction_id = contract_instance.newTrip(0,0, transact={'from': w3.eth.accounts[0]})
+time.sleep(10)
+#trip_id = contract_instance.newTrip(0,0)
 
-# contract_instance, tx_receipt = connect_to_chain(addr)
+print(new_trip_filter.get())
+print("Trip id: ",str(trip_id))
 
-## Deploy the contract at the beginning of the trip
-# contract_instance, tx_receipt = deploy_c()
 
-# Getters + Setters for web3.eth.contract object
-# print('Is truck driving: {}'.format(contract_instance.isTruckDriving()))
 
 sensors = set()
 for data in allData:
@@ -182,11 +184,11 @@ for i in range(len(acc_z)):
         print("Light threshold anomaly detected")
         print(time_stamp[i])
         print(intTimeStamp[i])
-        add_blk_light(contract_instance,trip_id,intTimeStamp[i], light_[i])
+        add_blk_light(w3,contract_instance,trip_id,intTimeStamp[i], light_[i])
 
     if acc_z[i]>-0.5:
         print("Acceleration data anomaly detected")
-        add_blk_bump(contract_instance,trip_id,intTimeStamp[i], light_[i])
+        add_blk_bump(w3,contract_instance,trip_id,intTimeStamp[i], acc_z[i])
     print("Sleeping for time: ",time_diff[i])
     time.sleep(time_diff[i]/100)
 
