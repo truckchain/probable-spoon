@@ -10,12 +10,12 @@ This repo is based on python that takes the data in json format and processes it
 ## Running the simulator
 You will need the contract file to create an instance of the contract
 This is located in our other repo: 
-'''
+```
 git clone https://github.com/truckchain/refactored-train
-'''
+```
 Now run the final_script:
-'''
+```
 python3 final_script.py
-'''
+```
 
 ![shot](simulator-shot.png)
