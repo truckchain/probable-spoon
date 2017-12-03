@@ -24,17 +24,25 @@ LIGHT_THRESHOLD = 2000
 ## contract_instance.trackLightEvent(12345678,1)
 
 
-def add_blk_light(tx_receipt,carrierName,timestampVal, lightVal):
-    old_add = tx_receipt['contractAddress']
-    contract_instance.trackLightEvent(carrierName,timestampVal,lightVal)
-    time.sleep(30)
-    print('Contract value: {}'.format(contract_instance.getTripRating()))
+def add_blk_light(contract_instance, trip_id,timestampVal, lightVal):
+    # old_add = tx_receipt['contractAddress']
+    ## Convert the timestampVal to integer
+    #p='%Y-%m-%d %H:%M:%S'
+    #intTimeStamp = int(time.mktime(time.strptime(timestampVal,p)))
+    print(trip_id,timestampVal,int(lightVal))
+    contract_instance.trackLightEvent(trip_id,timestampVal,int(lightVal))
+    # time.sleep(30)
+    # print('Contract value: {}'.format(contract_instance.getTripRating()))
 
-def add_blk_bump(tx_receipt,carrierName,timestampVal, accVal):
-    old_add = tx_receipt['contractAddress']
-    contract_instance.trackBumpEvent(carrierName,timestampVal,accVal)
-    time.sleep(30)
-    print('Contract value: {}'.format(contract_instance.getTripRating()))
+def add_blk_bump(contract_instance,trip_id,timestampVal, accVal):
+    # old_add = tx_receipt['contractAddress']
+    #p='%Y-%m-%d %H:%M:%S'
+    #intTimeStamp = int(time.mktime(time.strptime(timestampVal,p)))
+    print(trip_id,timestampVal,int(accVal*100000))
+
+    contract_instance.trackBumpEvent(trip_id,timestampVal,int(accVal*100000))
+    # time.sleep(30)
+    # print('Contract value: {}'.format(contract_instance.getTripRating()))
     #print(old_add)
     #while(tx_receipt['contractAddress']==old_add):
     #    print(tx_receipt['contractAddress'])
@@ -60,16 +68,14 @@ for line in open('./data/trailer-A.json', 'r'):
 
 assert allData != []
 
-addr = "0x2f5a7526A042dE3996C35a6e3aDEa554e089998E"
-
-contract_abi = connect_to_chain(addr)
-
-
-## Get carrier name
-carrierName = contract_instance.getCarrierName()
-
+addr = "0xC88B6650665cE79BbC30383417CDd1ac6A47CA78"
 
 ## Connect to the block chain
+contract_instance = connect_to_chain(addr)
+
+## Start a new trip
+trip_id = contract_instance.newTrip(0,0)
+
 # contract_instance, tx_receipt = connect_to_chain(addr)
 
 ## Deploy the contract at the beginning of the trip
@@ -99,11 +105,12 @@ class SensorDataInfo(object):
     sensorLocation = ""
 
     # The class "constructor" - It's actually an initializer
-    def __init__(self, valueLength, values, timestamp, sensorLocation):
+    def __init__(self, valueLength, values, timestamp, sensorLocation, intTimeStamp):
         self.valueLength = valueLength
         self.values = values
         self.timestamp = timestamp
         self.sensorLocation = sensorLocation
+        self.intTimeStamp = intTimeStamp
 
     def getvalues(self):
         return self.values
@@ -117,7 +124,8 @@ class SensorDataInfo(object):
     def getsensorLocation(self):
         return self.sensorLocation
 
-
+    def getintTimeStamp(self):
+        return self.intTimeStamp
 
 sensor_data = dict()
 for sensor in sensors:
@@ -125,7 +133,7 @@ for sensor in sensors:
     for data in allData:
         if data['sensorType'] ==sensor:
             timestamp1 =datetime.datetime.fromtimestamp(int(data['timestamp'])/ 1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
-            sensr_obj = SensorDataInfo(data['valueLength'],data['values'],timestamp1,data['sensorLocation'])
+            sensr_obj = SensorDataInfo(data['valueLength'],data['values'],timestamp1,data['sensorLocation'],data['timestamp'])
             sensor_data[sensor].append(sensr_obj)
 
 
@@ -144,12 +152,14 @@ acc_x = []
 acc_y = []
 acc_z = []
 time_stamp = []
+intTimeStamp = []
 for sens,data in sensor_data.items():
     if sens=="ACCELEROMETER":
         for dat in data:
             acc_x.append(dat.getvalues()[0])
             acc_y.append(dat.getvalues()[1])
             acc_z.append(dat.getvalues()[2])
+            intTimeStamp.append(dat.getintTimeStamp())
             time_stamp.append(np.datetime64(dat.gettimestamp()))
     if sens=="LIGHT":
         for dat in data:
@@ -170,19 +180,19 @@ for i in range(len(acc_z)):
     #Data anomalies
     if light_[i]>LIGHT_THRESHOLD:
         print("Light threshold anomaly detected")
-        add_blk_light(tx_receipt,carrierName,time_stamp[i], light_[i])
+        print(time_stamp[i])
+        print(intTimeStamp[i])
+        add_blk_light(contract_instance,trip_id,intTimeStamp[i], light_[i])
 
     if acc_z[i]>-0.5:
         print("Acceleration data anomaly detected")
-        add_blk_bump(tx_receipt,carrierName,time_stamp[i], light_[i])
+        add_blk_bump(contract_instance,trip_id,intTimeStamp[i], light_[i])
     print("Sleeping for time: ",time_diff[i])
-    time.sleep(time_diff[i])
-
-
-
+    time.sleep(time_diff[i]/100)
 
 
 '''
+
 
 # ## Compute Veclocity
 
